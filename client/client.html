@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwiftTrack - Client Portal</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #73487A 100%);
+      min-height: 100vh;
+      color: white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 80px 0;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(115, 72, 122, 0.3);
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, #73487A, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+      opacity: 0.9;
+    }
+
+    .hero-btn {
+      background: linear-gradient(45deg, #73487A, #9966cc);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(115, 72, 122, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(115, 72, 122, 0.5);
+    }
+
+    .hero-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .hero-btn:hover::before {
+      left: 100%;
+    }
+
+    /* Order Form */
+    .order-form {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(115, 72, 122, 0.3);
+      margin-bottom: 40px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.5s ease;
+      display: none;
+    }
+
+    .order-form.show {
+      opacity: 1;
+      transform: translateY(0);
+      display: block;
+      animation: slideInUp 0.5s ease-out;
+    }
+
+    .order-form h2 {
+      color: #73487A;
+      margin-bottom: 30px;
+      font-size: 2rem;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #73487A;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid rgba(115, 72, 122, 0.3);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      color: #333;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #73487A;
+      box-shadow: 0 0 20px rgba(115, 72, 122, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #73487A, #9966cc);
+      color: white;
+      border: none;
+      padding: 18px;
+      font-size: 1.2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(115, 72, 122, 0.4);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+
+    /* Order Result Card */
+    .order-result {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(115, 72, 122, 0.3);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.5s ease;
+      display: none;
+    }
+
+    .order-result.show {
+      opacity: 1;
+      transform: translateY(0);
+      display: block;
+      animation: slideInUp 0.5s ease-out;
+    }
+
+    .order-result h3 {
+      color: #73487A;
+      margin-bottom: 25px;
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .detail-card {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 15px;
+      border: 1px solid rgba(115, 72, 122, 0.4);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .detail-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(45deg, #73487A, #9966cc);
+    }
+
+    .detail-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(115, 72, 122, 0.3);
+    }
+
+    .detail-card h4 {
+      color: #73487A;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .detail-card h4::before {
+      content: '●';
+      color: #73487A;
+      margin-right: 10px;
+      font-size: 1.5rem;
+    }
+
+    .detail-item {
+      margin-bottom: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(115, 72, 122, 0.2);
+    }
+
+    .detail-item:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      color: #73487A;
+      font-weight: 600;
+      margin-right: 10px;
+    }
+
+    .detail-value {
+      color: #ffffff;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 20px rgba(115, 72, 122, 0.5);
+      }
+      to {
+        text-shadow: 0 0 30px rgba(115, 72, 122, 0.8);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Success Animation */
+    .success-check {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #73487A;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 1s ease-in-out;
+    }
+
+    .success-check::after {
+      content: '✓';
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+      
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .container {
+        padding: 10px;
+      }
+      
+      .order-form, .order-result {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero Section -->
+    <div class="hero">
+      <h1>SwiftTrack</h1>
+      <p>Streamlined Order Management & Tracking System</p>
+      <button class="hero-btn" onclick="showOrderForm()">
+        Place New Order
+      </button>
+    </div>
+
+    <!-- Order Form -->
+    <div class="order-form" id="orderForm">
+      <h2>Create New Order</h2>
+      
+      <div class="form-group">
+        <label for="orderId">Order ID:</label>
+        <input type="text" id="orderId" value="123" placeholder="Enter order ID">
+      </div>
+      
+      <div class="form-group">
+        <label for="address">Delivery Address:</label>
+        <input type="text" id="address" value="Colombo" placeholder="Enter delivery address">
+      </div>
+      
+      <div class="form-group">
+        <label for="client">Client Name:</label>
+        <input type="text" id="client" value="ShopX" placeholder="Enter client name">
+      </div>
+      
+      <button class="submit-btn" onclick="submitOrder()" id="submitBtn">
+        Submit Order
+      </button>
+    </div>
+
+    <!-- Order Result -->
+    <div class="order-result" id="orderResult">
+      <div class="success-check"></div>
+      <h3>Order Processed Successfully</h3>
+      <div id="orderDetails"></div>
+    </div>
+  </div>
+
+  <script>
+    let isFormVisible = false;
+    let isSubmitting = false;
+
+    function showOrderForm() {
+      const form = document.getElementById('orderForm');
+      if (!isFormVisible) {
+        form.classList.add('show');
+        isFormVisible = true;
+        
+        // Smooth scroll to form
+        setTimeout(() => {
+          form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+
+    async function submitOrder() {
+      if (isSubmitting) return;
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const orderId = document.getElementById('orderId').value;
+      const address = document.getElementById('address').value;
+      const client = document.getElementById('client').value;
+
+      // Validation
+      if (!orderId || !address || !client) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      // Show loading state
+      isSubmitting = true;
+      submitBtn.innerHTML = '<span class="loading"></span>Processing Order...';
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch("http://localhost:3000/order/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, address, client })
+        });
+
+        const data = await response.json();
+        
+        // Hide form and show result
+        document.getElementById('orderForm').classList.remove('show');
+        displayOrderResult(data);
+        
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to submit order. Please try again.');
+      } finally {
+        // Reset button
+        isSubmitting = false;
+        submitBtn.innerHTML = 'Submit Order';
+        submitBtn.disabled = false;
+      }
+    }
+
+    function displayOrderResult(data) {
+      const resultDiv = document.getElementById('orderResult');
+      const detailsDiv = document.getElementById('orderDetails');
+      
+      // Create order details HTML
+      let detailsHTML = `
+        <div class="details-grid">
+          <div class="detail-card">
+            <h4>Order Information</h4>
+            <div class="detail-item">
+              <span class="detail-label">Order ID:</span>
+              <span class="detail-value">${data.orderId || 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Client:</span>
+              <span class="detail-value">${data.client || 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Address:</span>
+              <span class="detail-value">${data.address || 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status:</span>
+              <span class="detail-value">${data.status || 'Processing'}</span>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h4>CMS Details</h4>
+            <div class="detail-item">
+              <span class="detail-label">CMS ID:</span>
+              <span class="detail-value">${data.cms?.id || 'CMS-' + Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Content Status:</span>
+              <span class="detail-value">${data.cms?.status || 'Active'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Last Updated:</span>
+              <span class="detail-value">${data.cms?.updated || new Date().toLocaleString()}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Version:</span>
+              <span class="detail-value">${data.cms?.version || '1.0.0'}</span>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h4>WMS Details</h4>
+            <div class="detail-item">
+              <span class="detail-label">Warehouse ID:</span>
+              <span class="detail-value">${data.wms?.warehouseId || 'WH-' + Math.random().toString(36).substr(2, 4).toUpperCase()}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Inventory Status:</span>
+              <span class="detail-value">${data.wms?.inventory || 'Available'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Pick Location:</span>
+              <span class="detail-value">${data.wms?.location || 'Zone A-12'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Est. Pick Time:</span>
+              <span class="detail-value">${data.wms?.pickTime || '15 minutes'}</span>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h4>ROS Details</h4>
+            <div class="detail-item">
+              <span class="detail-label">Route ID:</span>
+              <span class="detail-value">${data.ros?.routeId || 'RT-' + Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Delivery Vehicle:</span>
+              <span class="detail-value">${data.ros?.vehicle || 'Vehicle-042'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Est. Delivery:</span>
+              <span class="detail-value">${data.ros?.eta || '2-3 hours'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Driver:</span>
+              <span class="detail-value">${data.ros?.driver || 'Driver assigned'}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add raw response if available
+      if (data && Object.keys(data).length > 0) {
+        detailsHTML += `
+          <div class="detail-card" style="grid-column: 1 / -1; margin-top: 20px;">
+            <h4>Raw Response Data</h4>
+            <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; overflow-x: auto; color: #ccc; font-size: 0.9rem;">${JSON.stringify(data, null, 2)}</pre>
+          </div>
+        `;
+      }
+
+      detailsDiv.innerHTML = detailsHTML;
+      resultDiv.classList.add('show');
+      
+      // Scroll to result
+      setTimeout(() => {
+        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+
+    // Add input animations
+    document.addEventListener('DOMContentLoaded', function() {
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          this.parentElement.style.transform = 'scale(1.02)';
+        });
+        
+        input.addEventListener('blur', function() {
+          this.parentElement.style.transform = 'scale(1)';
+        });
+      });
+    });
+
+    // Add floating particles effect
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.style.cssText = `
+        position: fixed;
+        width: 4px;
+        height: 4px;
+        background: #73487A;
+        border-radius: 50%;
+        pointer-events: none;
+        animation: float 6s linear infinite;
+        left: ${Math.random() * 100}vw;
+        opacity: 0.7;
+        z-index: -1;
+      `;
+      
+      document.body.appendChild(particle);
+      
+      setTimeout(() => {
+        particle.remove();
+      }, 6000);
+    }
+
+    // Create floating particles
+    setInterval(createParticle, 3000);
+
+    // Add floating animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes float {
+        0% {
+          transform: translateY(100vh) rotate(0deg);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.7;
+        }
+        90% {
+          opacity: 0.7;
+        }
+        100% {
+          transform: translateY(-10px) rotate(360deg);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwiftTrack - Driver App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #73487A 100%);
+      min-height: 100vh;
+      color: white;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 40px 0;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(115, 72, 122, 0.3);
+      animation: fadeInDown 1s ease-out;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, #73487A, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      color: #cccccc;
+    }
+
+    /* Action Panel */
+    .action-panel {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(115, 72, 122, 0.3);
+      margin-bottom: 30px;
+      animation: fadeInUp 1s ease-out 0.2s both;
+    }
+
+    .fetch-btn {
+      background: linear-gradient(45deg, #73487A, #9966cc);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(115, 72, 122, 0.3);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .fetch-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(115, 72, 122, 0.5);
+    }
+
+    .fetch-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .fetch-btn:hover::before {
+      left: 100%;
+    }
+
+    /* Orders Grid */
+    .orders-container {
+      margin-bottom: 30px;
+    }
+
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .order-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 25px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(115, 72, 122, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      animation: slideInUp 0.5s ease-out;
+    }
+
+    .order-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(45deg, #73487A, #9966cc);
+    }
+
+    .order-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(115, 72, 122, 0.3);
+      border-color: rgba(115, 72, 122, 0.6);
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .order-id {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #73487A;
+    }
+
+    .order-status {
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+      border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .status-delivered {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28a745;
+      border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+
+    .status-failed {
+      background: rgba(220, 53, 69, 0.2);
+      color: #dc3545;
+      border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .order-details {
+      margin-bottom: 15px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(115, 72, 122, 0.2);
+    }
+
+    .detail-label {
+      color: #cccccc;
+      font-weight: 500;
+    }
+
+    .detail-value {
+      color: white;
+      font-weight: 600;
+    }
+
+    /* Delivery Actions */
+    .delivery-actions {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(115, 72, 122, 0.3);
+      animation: fadeInUp 1s ease-out 0.4s both;
+    }
+
+    .delivery-actions h2 {
+      color: #73487A;
+      margin-bottom: 25px;
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    .action-form {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .action-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 15px 20px;
+      border: 2px solid rgba(115, 72, 122, 0.3);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      color: #333;
+    }
+
+    .action-input:focus {
+      outline: none;
+      border-color: #73487A;
+      box-shadow: 0 0 20px rgba(115, 72, 122, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .action-btn {
+      padding: 15px 25px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 150px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .delivered-btn {
+      background: linear-gradient(45deg, #28a745, #20c997);
+      color: white;
+    }
+
+    .failed-btn {
+      background: linear-gradient(45deg, #dc3545, #e74c3c);
+      color: white;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Status Message */
+    .status-message {
+      background: rgba(115, 72, 122, 0.2);
+      border: 1px solid #73487A;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+
+    .status-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .no-orders {
+      text-align: center;
+      padding: 40px;
+      color: #cccccc;
+      font-size: 1.1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      border: 2px dashed rgba(115, 72, 122, 0.3);
+    }
+
+    .orders-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .orders-title {
+      color: #73487A;
+      font-size: 1.8rem;
+      margin: 0;
+    }
+
+    .orders-count {
+      background: #73487A;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 20px rgba(115, 72, 122, 0.5);
+      }
+      to {
+        text-shadow: 0 0 30px rgba(115, 72, 122, 0.8);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .pulse {
+      animation: pulse 0.3s ease-in-out;
+    }
+
+    /* Route Icon */
+    .route-icon {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      background: #73487A;
+      border-radius: 50%;
+      margin-right: 10px;
+      position: relative;
+      vertical-align: middle;
+    }
+
+    .route-icon::after {
+      content: '🚛';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14px;
+    }
+
+    /* Success/Error animations */
+    .success-flash {
+      animation: successFlash 0.6s ease-in-out;
+    }
+
+    .error-flash {
+      animation: errorFlash 0.6s ease-in-out;
+    }
+
+    @keyframes successFlash {
+      0% { background-color: rgba(40, 167, 69, 0); }
+      50% { background-color: rgba(40, 167, 69, 0.3); }
+      100% { background-color: rgba(40, 167, 69, 0); }
+    }
+
+    @keyframes errorFlash {
+      0% { background-color: rgba(220, 53, 69, 0); }
+      50% { background-color: rgba(220, 53, 69, 0.3); }
+      100% { background-color: rgba(220, 53, 69, 0); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .orders-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .action-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .action-btn {
+        min-width: auto;
+      }
+      
+      body {
+        padding: 10px;
+      }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      background: #73487A;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 8s linear infinite;
+      opacity: 0.6;
+      z-index: -1;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.6;
+      }
+      90% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateY(-10px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      border: 2px dashed rgba(115, 72, 122, 0.3);
+      margin-top: 20px;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.7;
+    }
+
+    .empty-state h3 {
+      color: #73487A;
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+    }
+
+    .empty-state p {
+      color: #cccccc;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>SwiftTrack Driver</h1>
+      <p>Delivery Management Dashboard</p>
+    </div>
+
+    <!-- Action Panel -->
+    <div class="action-panel">
+      <button class="fetch-btn" onclick="fetchOrders()" id="fetchBtn">
+        📦 Get Assigned Orders
+      </button>
+    </div>
+
+    <!-- Orders Container -->
+    <div class="orders-container">
+      <div id="route">
+        <div class="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <h3>No Orders Loaded</h3>
+          <p>Click "Get Assigned Orders" to load your delivery assignments</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Actions -->
+    <div class="delivery-actions">
+      <h2>Delivery Actions</h2>
+      <div class="action-form">
+        <input type="text" id="orderId" placeholder="Enter Order ID" class="action-input">
+        <button class="action-btn delivered-btn" onclick="markDelivered()">
+          ✅ Mark Delivered
+        </button>
+        <button class="action-btn failed-btn" onclick="markFailed()">
+          ❌ Mark Failed
+        </button>
+      </div>
+      <div id="status" class="status-message"></div>
+    </div>
+  </div>
+
+  <script>
+    let isLoading = false;
+
+    // Fetch all assigned orders from middleware (DB)
+    async function fetchOrders() {
+      if (isLoading) return;
+      
+      const fetchBtn = document.getElementById('fetchBtn');
+      isLoading = true;
+      
+      // Show loading state
+      fetchBtn.innerHTML = '<span class="loading"></span>Loading Orders...';
+      fetchBtn.disabled = true;
+
+      try {
+        const response = await fetch("http://localhost:3000/driver/orders");
+        const orders = await response.json();
+
+        const routeDiv = document.getElementById("route");
+
+        if (orders.length === 0) {
+          routeDiv.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📭</div>
+              <h3>No Orders Assigned</h3>
+              <p>No delivery assignments found at this time</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Create orders header
+        let html = `
+          <div class="orders-header">
+            <h3 class="orders-title">Assigned Orders</h3>
+            <div class="orders-count">${orders.length} Order${orders.length !== 1 ? 's' : ''}</div>
+          </div>
+          <div class="orders-grid">
+        `;
+
+        // Create order cards
+        orders.forEach((order, index) => {
+          const statusClass = order.status.toLowerCase() === 'delivered' ? 'status-delivered' : 
+                             order.status.toLowerCase() === 'failed' ? 'status-failed' : 'status-pending';
+          
+          html += `
+            <div class="order-card" style="animation-delay: ${index * 0.1}s">
+              <div class="order-header">
+                <div class="order-id">
+                  <span class="route-icon"></span>
+                  ${order.order_id}
+                </div>
+                <div class="order-status ${statusClass}">
+                  ${order.status}
+                </div>
+              </div>
+              <div class="order-details">
+                <div class="detail-row">
+                  <span class="detail-label">📍 Address:</span>
+                  <span class="detail-value">${order.address}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">🚛 Route:</span>
+                  <span class="detail-value">${order.address || 'Pending'}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">🕒 Priority:</span>
+                  <span class="detail-value">${order.priority || 'Standard'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        html += '</div>';
+        routeDiv.innerHTML = html;
+
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        document.getElementById("route").innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <h3>Connection Error</h3>
+            <p>Unable to fetch orders. Please check your connection and try again.</p>
+          </div>
+        `;
+      } finally {
+        // Reset button
+        isLoading = false;
+        fetchBtn.innerHTML = '📦 Get Assigned Orders';
+        fetchBtn.disabled = false;
+      }
+    }
+
+    // Update delivery status
+    async function markDelivered() {
+      const orderId = document.getElementById('orderId').value;
+      if (!orderId.trim()) {
+        alert('Please enter an Order ID');
+        return;
+      }
+
+      try {
+        await fetch("http://localhost:3000/driver/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, status: "Delivered" })
+        });
+
+        showStatusMessage(`Order ${orderId} ✅ Delivered`, 'success');
+        document.getElementById('orderId').value = '';
+        fetchOrders(); // refresh orders list
+      } catch (error) {
+        console.error('Error updating order:', error);
+        showStatusMessage('Failed to update order status', 'error');
+      }
+    }
+
+    async function markFailed() {
+      const orderId = document.getElementById('orderId').value;
+      if (!orderId.trim()) {
+        alert('Please enter an Order ID');
+        return;
+      }
+
+      try {
+        await fetch("http://localhost:3000/driver/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, status: "Failed" })
+        });
+
+        showStatusMessage(`Order ${orderId} ❌ Failed`, 'error');
+        document.getElementById('orderId').value = '';
+        fetchOrders(); // refresh orders list
+      } catch (error) {
+        console.error('Error updating order:', error);
+        showStatusMessage('Failed to update order status', 'error');
+      }
+    }
+
+    function showStatusMessage(message, type) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = message;
+      statusDiv.classList.add('show');
+      
+      // Add flash effect to container
+      if (type === 'success') {
+        document.querySelector('.delivery-actions').classList.add('success-flash');
+      } else if (type === 'error') {
+        document.querySelector('.delivery-actions').classList.add('error-flash');
+      }
+      
+      // Remove flash effect
+      setTimeout(() => {
+        document.querySelector('.delivery-actions').classList.remove('success-flash', 'error-flash');
+      }, 600);
+      
+      // Hide status message after 5 seconds
+      setTimeout(() => {
+        statusDiv.classList.remove('show');
+      }, 5000);
+    }
+
+    // Add input animations and effects
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('orderId');
+      
+      input.addEventListener('focus', function() {
+        this.style.transform = 'scale(1.02)';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.style.transform = 'scale(1)';
+      });
+
+      // Enter key support
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // Focus on delivered button as default action
+          document.querySelector('.delivered-btn').focus();
+        }
+      });
+    });
+
+    // Create floating particles
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + 'vw';
+      document.body.appendChild(particle);
+      
+      setTimeout(() => {
+        particle.remove();
+      }, 8000);
+    }
+
+    // Generate particles periodically
+    setInterval(createParticle, 4000);
+
+    // Add button click effects
+    document.addEventListener('click', function(e) {
+      if (e.target.tagName === 'BUTTON') {
+        e.target.classList.add('pulse');
+        setTimeout(() => {
+          e.target.classList.remove('pulse');
+        }, 300);
+      }
+    });
+  </script>
+</body>
+</html>
