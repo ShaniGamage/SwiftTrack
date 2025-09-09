@@ -102,23 +102,23 @@ app.post('/order/process', async (req, res) => {
   const { orderId, address, client } = req.body;
 
   try {
-    // 1️⃣ Save order to DB
+    // Save order to DB
     await pool.query(
       'INSERT INTO orders (order_id, client, address, status) VALUES ($1,$2,$3,$4) ON CONFLICT (order_id) DO NOTHING',
       [orderId, client, address, 'Pending']
     );
 
-    // 2️⃣ CMS (SOAP)
+    // CMS (SOAP)
     const url = 'http://localhost:5000/cms?wsdl';
     const clientSoap = await soap.createClientAsync(url);
     const [cmsResult] = await clientSoap.CreateOrderAsync({ orderId, client });
 
-    // 3️⃣ ROS (REST)
+    // ROS (REST)
     const rosResponse = await axios.post('http://localhost:4000/plan-route', {
       orderId, address
     });
 
-    // 4️⃣ WMS (TCP)
+    // WMS (TCP)
     const wmsResponse = await new Promise((resolve, reject) => {
       const tcpClient = new net.Socket();
       tcpClient.connect(6000, '127.0.0.1', () => tcpClient.write(orderId));
@@ -130,7 +130,7 @@ app.post('/order/process', async (req, res) => {
       tcpClient.on('error', (err) => reject(err.message));
     });
 
-    // 5️⃣ Update DB with route + status
+    // Update DB with route + status
     await pool.query(
       'UPDATE orders SET route=$1, status=$2 WHERE order_id=$3',
       [rosResponse.data.route, 'Ready', orderId]
