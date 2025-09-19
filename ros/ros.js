@@ -8,8 +8,8 @@ app.post('/plan-route', (req, res) => {
 
   res.json({
     orderId,
-    route: `Optimized route to ${address}`,
-    status: 'Planned'
+    address: `Optimized route to ${address}`,
+    status: 'pending'
   });
 });
 

@@ -52,7 +52,7 @@ app.post('/order/full', async (req, res) => {
     // Call CMS SOAP service
     const url = 'http://localhost:5000/cms?wsdl';
     const clientSoap = await soap.createClientAsync(url);
-    const [cmsResult] = await clientSoap.CreateOrderAsync({ orderId, client });
+    const [cmsResult] = await clientSoap.CreateOrderAsync({ orderId, fullName });
 
     // Call ROS REST API
     const response = await axios.post('http://localhost:4000/plan-route', {
@@ -96,32 +96,36 @@ app.post('/order/wms', (req, res) => {
   });
 });
 
-
 // Combined Order Processing (CMS + ROS + WMS)
 app.post('/order/process', async (req, res) => {
-  const { orderId, address, client } = req.body;
+  const { fullName, email, phone, address, zip, city } = req.body;
 
   try {
-    // Save order to DB
-    await pool.query(
-      'INSERT INTO orders (order_id, client, address, status) VALUES ($1,$2,$3,$4) ON CONFLICT (order_id) DO NOTHING',
-      [orderId, client, address, 'Pending']
+    // Save order to DB and get auto-generated ID
+    const result = await pool.query(
+      `INSERT INTO orders (full_name, email, phone, address, zip, city, status) 
+       VALUES ($1,$2,$3,$4,$5,$6,$7) 
+       RETURNING order_id`,
+      [fullName, email, phone, address, zip, city, 'pending'] 
     );
+
+    const orderId = result.rows[0].order_id;
 
     // CMS (SOAP)
     const url = 'http://localhost:5000/cms?wsdl';
     const clientSoap = await soap.createClientAsync(url);
-    const [cmsResult] = await clientSoap.CreateOrderAsync({ orderId, client });
+    const [cmsResult] = await clientSoap.CreateOrderAsync({ orderId, customer: fullName });
 
     // ROS (REST)
     const rosResponse = await axios.post('http://localhost:4000/plan-route', {
-      orderId, address
+      orderId,
+      address
     });
 
     // WMS (TCP)
     const wmsResponse = await new Promise((resolve, reject) => {
       const tcpClient = new net.Socket();
-      tcpClient.connect(6000, '127.0.0.1', () => tcpClient.write(orderId));
+      tcpClient.connect(6000, '127.0.0.1', () => tcpClient.write(orderId.toString()));
 
       tcpClient.on('data', (data) => {
         resolve(data.toString());
@@ -132,24 +136,25 @@ app.post('/order/process', async (req, res) => {
 
     // Update DB with route + status
     await pool.query(
-      'UPDATE orders SET route=$1, status=$2 WHERE order_id=$3',
-      [rosResponse.data.route, 'Ready', orderId]
+      'UPDATE orders SET address=$1, status=$2 WHERE order_id=$3',
+      [rosResponse.data.address, 'dispatched', orderId]
     );
 
-    res.json({ cms: cmsResult, ros: rosResponse.data, wms: wmsResponse });
-
+    res.json({ orderId, cms: cmsResult, ros: rosResponse.data, wms: wmsResponse });
   } catch (err) {
-    console.error("Error:", err.message);
+    console.error("Order processing error:", err);
     res.status(500).json({ error: "Order processing failed", details: err.message });
   }
 });
 
+
 // Driver fetches all orders
 app.get('/driver/orders', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM orders ORDER BY id DESC');
+    const result = await pool.query('SELECT * FROM orders ');
     res.json(result.rows);
   } catch (err) {
+    console.error(err)
     res.status(500).json({ error: err.message });
   }
 });

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -348,6 +349,7 @@
         opacity: 0;
         transform: translateY(-30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -359,6 +361,7 @@
         opacity: 0;
         transform: translateY(30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -370,6 +373,7 @@
         opacity: 0;
         transform: translateY(20px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -380,6 +384,7 @@
       from {
         text-shadow: 0 0 20px rgba(115, 72, 122, 0.5);
       }
+
       to {
         text-shadow: 0 0 30px rgba(115, 72, 122, 0.8);
       }
@@ -395,9 +400,11 @@
       0% {
         transform: scale(1);
       }
+
       50% {
         transform: scale(1.05);
       }
+
       100% {
         transform: scale(1);
       }
@@ -438,15 +445,31 @@
     }
 
     @keyframes successFlash {
-      0% { background-color: rgba(40, 167, 69, 0); }
-      50% { background-color: rgba(40, 167, 69, 0.3); }
-      100% { background-color: rgba(40, 167, 69, 0); }
+      0% {
+        background-color: rgba(40, 167, 69, 0);
+      }
+
+      50% {
+        background-color: rgba(40, 167, 69, 0.3);
+      }
+
+      100% {
+        background-color: rgba(40, 167, 69, 0);
+      }
     }
 
     @keyframes errorFlash {
-      0% { background-color: rgba(220, 53, 69, 0); }
-      50% { background-color: rgba(220, 53, 69, 0.3); }
-      100% { background-color: rgba(220, 53, 69, 0); }
+      0% {
+        background-color: rgba(220, 53, 69, 0);
+      }
+
+      50% {
+        background-color: rgba(220, 53, 69, 0.3);
+      }
+
+      100% {
+        background-color: rgba(220, 53, 69, 0);
+      }
     }
 
     /* Responsive Design */
@@ -454,20 +477,20 @@
       .header h1 {
         font-size: 2rem;
       }
-      
+
       .orders-grid {
         grid-template-columns: 1fr;
       }
-      
+
       .action-form {
         flex-direction: column;
         align-items: stretch;
       }
-      
+
       .action-btn {
         min-width: auto;
       }
-      
+
       body {
         padding: 10px;
       }
@@ -491,12 +514,15 @@
         transform: translateY(100vh) rotate(0deg);
         opacity: 0;
       }
+
       10% {
         opacity: 0.6;
       }
+
       90% {
         opacity: 0.6;
       }
+
       100% {
         transform: translateY(-10px) rotate(360deg);
         opacity: 0;
@@ -531,6 +557,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <!-- Header -->
@@ -579,10 +606,10 @@
     // Fetch all assigned orders from middleware (DB)
     async function fetchOrders() {
       if (isLoading) return;
-      
+
       const fetchBtn = document.getElementById('fetchBtn');
       isLoading = true;
-      
+
       // Show loading state
       fetchBtn.innerHTML = '<span class="loading"></span>Loading Orders...';
       fetchBtn.disabled = true;
@@ -590,7 +617,7 @@
       try {
         const response = await fetch("http://localhost:3000/driver/orders");
         const orders = await response.json();
-
+        console.log("orders", orders)
         const routeDiv = document.getElementById("route");
 
         if (orders.length === 0) {
@@ -612,12 +639,23 @@
           </div>
           <div class="orders-grid">
         `;
+        if (orders.error) {
+          console.error('Server error:', orders.error);
+          alert('Failed to fetch orders: ' + orders.error);
+          return;
+        }
+
 
         // Create order cards
         orders.forEach((order, index) => {
-          const statusClass = order.status.toLowerCase() === 'delivered' ? 'status-delivered' : 
-                             order.status.toLowerCase() === 'failed' ? 'status-failed' : 'status-pending';
-          
+
+          const statusClass = order.status.toLowerCase() === 'delivered' ? 'delivered' :
+            order.status.toLowerCase() === 'cancelled' ? 'status-cancelled' : 'status-pending';
+
+          orders.forEach((order) => {
+            console.log(order.order_id, order.fullName, order.address, order.status);
+          });
+
           html += `
             <div class="order-card" style="animation-delay: ${index * 0.1}s">
               <div class="order-header">
@@ -640,7 +678,7 @@
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">🕒 Priority:</span>
-                  <span class="detail-value">${order.priority || 'Standard'}</span>
+                  <span class="detail-value">${order.fullName || 'Standard'}</span>
                 </div>
               </div>
             </div>
@@ -679,7 +717,7 @@
         await fetch("http://localhost:3000/driver/update", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId, status: "Delivered" })
+          body: JSON.stringify({ orderId, status: "delivered" })
         });
 
         showStatusMessage(`Order ${orderId} ✅ Delivered`, 'success');
@@ -718,19 +756,19 @@
       const statusDiv = document.getElementById('status');
       statusDiv.innerHTML = message;
       statusDiv.classList.add('show');
-      
+
       // Add flash effect to container
       if (type === 'success') {
         document.querySelector('.delivery-actions').classList.add('success-flash');
       } else if (type === 'error') {
         document.querySelector('.delivery-actions').classList.add('error-flash');
       }
-      
+
       // Remove flash effect
       setTimeout(() => {
         document.querySelector('.delivery-actions').classList.remove('success-flash', 'error-flash');
       }, 600);
-      
+
       // Hide status message after 5 seconds
       setTimeout(() => {
         statusDiv.classList.remove('show');
@@ -738,19 +776,19 @@
     }
 
     // Add input animations and effects
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const input = document.getElementById('orderId');
-      
-      input.addEventListener('focus', function() {
+
+      input.addEventListener('focus', function () {
         this.style.transform = 'scale(1.02)';
       });
-      
-      input.addEventListener('blur', function() {
+
+      input.addEventListener('blur', function () {
         this.style.transform = 'scale(1)';
       });
 
       // Enter key support
-      input.addEventListener('keypress', function(e) {
+      input.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
           // Focus on delivered button as default action
@@ -765,7 +803,7 @@
       particle.className = 'particle';
       particle.style.left = Math.random() * 100 + 'vw';
       document.body.appendChild(particle);
-      
+
       setTimeout(() => {
         particle.remove();
       }, 8000);
@@ -775,7 +813,7 @@
     setInterval(createParticle, 4000);
 
     // Add button click effects
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
       if (e.target.tagName === 'BUTTON') {
         e.target.classList.add('pulse');
         setTimeout(() => {
@@ -785,4 +823,5 @@
     });
   </script>
 </body>
+
 </html>
